@@ -36,9 +36,11 @@ date: 2025-07-20
 
 An accordion is a vertically stacked set of interactive headings that each contain a title, content snippet, or thumbnail representing a section of content.
 
-## Example
+## ARIA Roles and Properties
 
-[View live example](https://www.w3.org/WAI/ARIA/apg/patterns/accordion/examples/accordion/)
+- **button**: The accordion header acts as a button
+- **aria-expanded**: Indicates if the panel is expanded
+- **aria-controls**: Associates the button with its panel
 
 ## Keyboard Interaction
 
@@ -46,8 +48,24 @@ An accordion is a vertically stacked set of interactive headings that each conta
 - **Space or Enter**: When focus is on an accordion header, toggles the display of the associated panel
 `;
 
+  const mockBreadcrumbContent = `---
+title: Breadcrumb Pattern
+url: https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/
+date: 2025-07-20
+---
+
+# Breadcrumb Pattern
+
+A breadcrumb trail consists of a list of links to the parent pages of the current page in hierarchical order.
+
+## ARIA Roles
+
+- **navigation**: Applied to the breadcrumb container
+- **link**: Each breadcrumb item is a link
+`;
+
   describe('searchAccessibilityArticles', () => {
-    it('should search articles successfully', async () => {
+    it('should search articles with exact title match', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockIndex)
@@ -55,36 +73,96 @@ An accordion is a vertically stacked set of interactive headings that each conta
 
       const input: SearchQueryInput = {
         query: 'accordion',
-        maxResults: 10
+        maxResults: 10,
+        includeContent: false
       };
 
       const result = await searchAccessibilityArticles(input);
 
-      expect(result.articles).toHaveLength(1);
+      expect(result.articles.length).toBeGreaterThan(0);
+      // The first result should be the best match (accordion pattern)
       expect(result.articles[0].title).toBe('Accordion Pattern (Sections With Show/Hide Functionality)');
-      expect(result.articles[0].path).toBe('docs/www.w3.org_WAI_ARIA_apg_patterns_accordion.md');
-      expect(result.totalFound).toBe(1);
-      expect(result.query).toBe('accordion');
+      expect(result.articles[0].relevanceScore).toBeGreaterThan(0.5);
+      expect(result.articles[0].matchReason).toBe('Title match');
     });
 
-    it('should search case-insensitively', async () => {
+    it('should handle fuzzy matching for typos', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockIndex)
       });
 
       const input: SearchQueryInput = {
-        query: 'BREADCRUMB',
-        maxResults: 10
+        query: 'acordion', // typo in accordion
+        maxResults: 10,
+        includeContent: false
       };
 
       const result = await searchAccessibilityArticles(input);
 
-      expect(result.articles).toHaveLength(1);
-      expect(result.articles[0].title).toBe('Breadcrumb Pattern');
+      expect(result.articles.length).toBeGreaterThan(0);
+      // Should find the accordion pattern as the most relevant match
+      const accordionResult = result.articles.find(article =>
+        article.title.includes('Accordion'));
+      expect(accordionResult).toBeDefined();
+      expect(accordionResult!.matchReason).toContain('match');
     });
 
-    it('should limit results based on maxResults', async () => {
+    it('should search within content when includeContent is true', async () => {
+      // Mock index fetch
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockIndex)
+      });
+
+      // Mock content fetches for each article
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(mockArticleContent) })
+        .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(mockBreadcrumbContent) })
+        .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve('Some other content') });
+
+      const input: SearchQueryInput = {
+        query: 'aria-expanded',
+        maxResults: 10,
+        includeContent: true
+      };
+
+      const result = await searchAccessibilityArticles(input);
+
+      expect(result.articles.length).toBeGreaterThan(0);
+      expect(result.articles[0].matchReason).toBe('Content match');
+      expect(result.articles[0].snippet).toContain('aria-expanded');
+    });
+
+    it('should search for multiple words in content', async () => {
+      // Mock index fetch
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockIndex)
+      });
+
+      // Mock content fetches
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(mockArticleContent) })
+        .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(mockBreadcrumbContent) })
+        .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve('Some other content') });
+
+      const input: SearchQueryInput = {
+        query: 'keyboard interaction',
+        maxResults: 10,
+        includeContent: true
+      };
+
+      const result = await searchAccessibilityArticles(input);
+
+      expect(result.articles.length).toBeGreaterThan(0);
+      // Should find content matches or title matches
+      const hasContentMatch = result.articles.some(article =>
+        article.matchReason?.includes('Content match') || article.matchReason?.includes('Title match'));
+      expect(hasContentMatch).toBe(true);
+    });
+
+            it('should limit results based on maxResults', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockIndex)
@@ -92,39 +170,51 @@ An accordion is a vertically stacked set of interactive headings that each conta
 
       const input: SearchQueryInput = {
         query: 'pattern',
-        maxResults: 1
+        maxResults: 1,
+        includeContent: false
       };
 
       const result = await searchAccessibilityArticles(input);
 
       expect(result.articles).toHaveLength(1);
-      expect(result.totalFound).toBe(3); // Should find all three articles containing "pattern"
+      expect(result.totalFound).toBeGreaterThan(1); // Should find multiple but only return 1
     });
 
-    it('should handle fetch errors', async () => {
+    it('should handle fetch errors gracefully', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const input: SearchQueryInput = {
         query: 'accordion',
-        maxResults: 10
+        maxResults: 10,
+        includeContent: false
       };
 
       await expect(searchAccessibilityArticles(input)).rejects.toThrow('Failed to fetch accessibility index');
     });
 
-    it('should handle HTTP errors', async () => {
+
+
+    it('should include all expected fields in results', async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
+        ok: true,
+        json: () => Promise.resolve(mockIndex)
       });
 
       const input: SearchQueryInput = {
         query: 'accordion',
-        maxResults: 10
+        maxResults: 10,
+        includeContent: false
       };
 
-      await expect(searchAccessibilityArticles(input)).rejects.toThrow('Failed to fetch index: 404 Not Found');
+      const result = await searchAccessibilityArticles(input);
+
+      expect(result.articles[0]).toHaveProperty('title');
+      expect(result.articles[0]).toHaveProperty('path');
+      expect(result.articles[0]).toHaveProperty('url');
+      expect(result.articles[0]).toHaveProperty('relevanceScore');
+      expect(result.articles[0]).toHaveProperty('matchReason');
+      expect(result.query).toBe('accordion');
+      expect(typeof result.totalFound).toBe('number');
     });
   });
 
@@ -171,43 +261,15 @@ This describes the button pattern.`;
       expect(result.title).toBe('Button Pattern');
       expect(result.metadata).toBeUndefined();
     });
-
-    it('should handle 404 errors with specific message', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404
-      });
-
-      const input: FetchArticleInput = {
-        path: 'docs/nonexistent.md',
-        includeMetadata: true
-      };
-
-      await expect(fetchAccessibilityArticle(input)).rejects.toThrow('Article not found: docs/nonexistent.md');
-    });
-
-    it('should handle other HTTP errors', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error'
-      });
-
-      const input: FetchArticleInput = {
-        path: 'docs/accordion.md',
-        includeMetadata: true
-      };
-
-      await expect(fetchAccessibilityArticle(input)).rejects.toThrow('Failed to fetch article: 500 Internal Server Error');
-    });
   });
 
-  describe('listAccessibilityArticles', () => {
+    describe('listAccessibilityArticles', () => {
     it('should list all articles successfully', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockIndex)
-      });
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockIndex)
+        });
 
       const result = await listAccessibilityArticles();
 

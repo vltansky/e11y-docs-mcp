@@ -1,6 +1,6 @@
 {
     "mcpServers": {
-        "e11y-docs-mcp": {
+        "e11y-docs-mcp-1": {
             "command": "node",
             "args": [
                 "dist/server.js"

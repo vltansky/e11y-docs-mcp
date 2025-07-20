@@ -27,17 +27,19 @@ const server = new McpServer({
 // Tool 1: Search for relevant accessibility articles
 server.tool(
   'search_accessibility_articles',
-  'Search for relevant web accessibility articles from the e11y-mcp documentation repository. Find W3C WAI-ARIA patterns and accessibility implementation guidance.',
+  'Search for relevant web accessibility articles from the e11y-mcp documentation repository. Find W3C WAI-ARIA patterns and accessibility implementation guidance with fuzzy matching and content search.',
   {
-    query: z.string().describe('Search query to find relevant accessibility articles (e.g., "accordion", "button", "dialog")'),
+    query: z.string().describe('Search query to find relevant accessibility articles (supports fuzzy matching and typos)'),
     maxResults: z.number().min(1).max(20).optional().default(10).describe('Maximum number of results to return (1-20)'),
+    includeContent: z.boolean().optional().default(true).describe('Search within article content for better results (recommended)'),
     outputMode: z.enum(['json', 'compact-json']).optional().default('json').describe('Output format: "json" for formatted JSON (default), "compact-json" for minified JSON')
   },
   async (input) => {
     try {
       const result = await searchAccessibilityArticles({
         query: input.query,
-        maxResults: input.maxResults
+        maxResults: input.maxResults,
+        includeContent: input.includeContent
       });
 
       return {
