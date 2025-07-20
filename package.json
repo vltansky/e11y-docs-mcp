@@ -1,0 +1,51 @@
+{
+  "name": "mcp-server-boilerplate",
+  "version": "0.1.0",
+  "description": "A boilerplate template for building Model Context Protocol (MCP) servers with TypeScript",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "mcp-server-boilerplate": "dist/server.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/server.js",
+    "inspector": "nodemon --watch dist --exec 'npx @modelcontextprotocol/inspector node dist/server.js'",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "prepublishOnly": "npm run build && chmod +x dist/server.js",
+    "postinstall": "chmod +x dist/server.js 2>/dev/null || true"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "typescript",
+    "boilerplate",
+    "template",
+    "ai-assistant",
+    "claude",
+    "cursor"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@vitest/ui": "^3.2.2",
+    "nodemon": "^3.1.10",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^3.2.2"
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+        "mcp-server-boilerplate": {
+            "command": "node",
+            "args": [
+                "dist/server.js"
+            ]
+        }
+    }
+}
