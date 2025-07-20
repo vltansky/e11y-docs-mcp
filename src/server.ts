@@ -1,27 +1,11 @@
 #!/usr/bin/env node
 
 /*
- * WORKFLOW GUIDANCE FOR AI ASSISTANTS:
+ * E11y Documentation MCP Server
  *
-
-* **ALWAYS START WITH PROJECT FILTERING** for project-specific analysis:
- * 1. DISCOVERY: Use list_conversations with projectPath parameter to find project-specific conversations
- * 2. ANALYTICS: Use get_conversation_analytics with projectPath and ["files", "languages"] breakdowns
- *    - Files/languages breakdowns contain conversation IDs in their arrays!
- * 3. DEEP DIVE: Use get_conversation with specific conversation IDs from step 1 or 2
- * 4. ANALYSIS: Use analytics tools (find_related, extract_elements) for insights
- * 5. DATE FILTERING: Use get_system_info first when applying date filters to search_conversations
- *
- * RECOMMENDED PATTERN FOR PROJECT ANALYSIS:
- * - list_conversations(projectPath: "project-name", startDate: "YYYY-MM-DD", endDate: "YYYY-MM-DD")
- * - get_conversation_analytics(projectPath: "project-name", includeBreakdowns: ["files", "languages"])
- * - Extract conversation IDs from files/languages.conversations arrays
- * - get_conversation(conversationId: "id-from-breakdown") for each relevant conversation
- *
- * PROJECT PATH EXAMPLES:
- * - "my-app" (project name)
- * - "/Users/name/Projects/my-app" (full path)
- * - "editor-elements" (project name from path like /Users/name/Projects/editor-elements)
+ * Provides access to web accessibility documentation from the e11y-mcp repository.
+ * This server allows AI assistants to search for and fetch W3C WAI-ARIA patterns
+ * and accessibility best practices documentation.
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -29,28 +13,63 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
 import { z } from 'zod';
 import { formatResponse } from './utils/formatter.js';
-import { exampleDataOperation } from './tools/example-tools.js';
+import {
+  searchAccessibilityArticles,
+  fetchAccessibilityArticle,
+  listAccessibilityArticles
+} from './tools/e11y-tools.js';
 
 const server = new McpServer({
-  name: 'mcp-server-boilerplate',
+  name: 'e11y-docs-mcp',
   version: '0.1.0',
 });
 
-// Tool 1: Simple data retrieval
+// Tool 1: Search for relevant accessibility articles
 server.tool(
-  'get_data',
-  'Retrieve data from your custom data source with optional filtering and pagination.',
+  'search_accessibility_articles',
+  'Search for relevant web accessibility articles from the e11y-mcp documentation repository. Find W3C WAI-ARIA patterns and accessibility implementation guidance.',
   {
-    limit: z.number().min(1).max(100).optional().default(10).describe('Maximum number of items to return (1-100)'),
-    filter: z.string().optional().describe('Filter criteria for the data'),
-    includeMetadata: z.boolean().optional().default(false).describe('Include additional metadata in the response'),
+    query: z.string().describe('Search query to find relevant accessibility articles (e.g., "accordion", "button", "dialog")'),
+    maxResults: z.number().min(1).max(20).optional().default(10).describe('Maximum number of results to return (1-20)'),
     outputMode: z.enum(['json', 'compact-json']).optional().default('json').describe('Output format: "json" for formatted JSON (default), "compact-json" for minified JSON')
   },
   async (input) => {
     try {
-      const result = await exampleDataOperation({
-        limit: input.limit,
-        filter: input.filter,
+      const result = await searchAccessibilityArticles({
+        query: input.query,
+        maxResults: input.maxResults
+      });
+
+      return {
+        content: [{
+          type: 'text',
+          text: formatResponse(result, input.outputMode)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error searching accessibility articles: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+        }]
+      };
+    }
+  }
+);
+
+// Tool 2: Fetch specific accessibility article content
+server.tool(
+  'fetch_accessibility_article',
+  'Fetch the complete content of a specific accessibility article from the e11y-mcp repository. Use the path from search results to retrieve the full markdown documentation.',
+  {
+    path: z.string().describe('Path to the accessibility article (from search results, e.g., "docs/www.w3.org_WAI_ARIA_apg_patterns_accordion.md")'),
+    includeMetadata: z.boolean().optional().default(true).describe('Include article metadata such as source URL and last updated date'),
+    outputMode: z.enum(['json', 'compact-json']).optional().default('json').describe('Output format: "json" for formatted JSON (default), "compact-json" for minified JSON')
+  },
+  async (input) => {
+    try {
+      const result = await fetchAccessibilityArticle({
+        path: input.path,
         includeMetadata: input.includeMetadata
       });
 
@@ -64,56 +83,38 @@ server.tool(
       return {
         content: [{
           type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+          text: `Error fetching accessibility article: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
         }]
       };
     }
   }
 );
 
-// Tool 2: System utilities
+// Tool 3: List all available accessibility articles
 server.tool(
-  'get_system_info',
-  'Get system information and utilities. Provides current date, timezone, and other helpful context.',
+  'list_accessibility_articles',
+  'List all available accessibility articles in the e11y-mcp documentation repository. Get an overview of all W3C WAI-ARIA patterns and accessibility guidance available.',
   {
-    info: z.enum(['date', 'timezone', 'version', 'all']).optional().default('all').describe('Type of system information to retrieve')
+    outputMode: z.enum(['json', 'compact-json']).optional().default('json').describe('Output format: "json" for formatted JSON (default), "compact-json" for minified JSON')
   },
   async (input) => {
-    const now = new Date();
-    const currentDate = now.toISOString().split('T')[0];
-    const currentTime = now.toISOString();
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const version = '0.1.0';
+    try {
+      const result = await listAccessibilityArticles();
 
-    let response = '';
-
-    switch (input.info) {
-      case 'date':
-        response = `Current date: ${currentDate}`;
-        break;
-      case 'timezone':
-        response = `Timezone: ${timezone}`;
-        break;
-      case 'version':
-        response = `Server version: ${version}`;
-        break;
-      default:
-        response = [
-          `Current date: ${currentDate}`,
-          `Current time: ${currentTime}`,
-          `Timezone: ${timezone}`,
-          `Server version: ${version}`,
-          ``,
-          `Use this information for date filtering and context.`
-        ].join('\n');
+      return {
+        content: [{
+          type: 'text',
+          text: formatResponse(result, input.outputMode)
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error listing accessibility articles: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+        }]
+      };
     }
-
-    return {
-      content: [{
-        type: 'text',
-        text: response
-      }]
-    };
   }
 );
 

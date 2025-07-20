@@ -1,34 +1,63 @@
-# MCP Server Boilerplate
+# E11y Documentation MCP Server
 
-**A TypeScript template for building Model Context Protocol (MCP) servers.**
+**A Model Context Protocol (MCP) server for accessing web accessibility documentation.**
 
-This boilerplate provides a solid foundation for creating MCP servers that can integrate with Cursor, Claude, and other AI assistants. It includes best practices, example tools, proper error handling, and a well-structured TypeScript codebase.
+This MCP server provides AI assistants with access to web accessibility documentation from the [e11y-mcp repository](https://github.com/vltansky/e11y-mcp). It allows searching for and fetching W3C WAI-ARIA patterns and accessibility best practices documentation.
 
-## What This Template Provides
+## Features
 
-- **Complete MCP Server Setup**: Ready-to-use server with proper configuration
-- **Example Tools**: Demonstrates common MCP tool patterns and best practices
-- **TypeScript Integration**: Full type safety with Zod validation
-- **Error Handling**: Robust error handling patterns throughout
-- **Testing Setup**: Vitest configuration for unit testing
-- **Development Workflow**: Build, watch, and inspection scripts
+- **Search Accessibility Articles**: Find relevant W3C WAI-ARIA patterns and accessibility documentation
+- **Fetch Article Content**: Retrieve complete markdown documentation with metadata
+- **List All Articles**: Get an overview of all available accessibility documentation
+- **Real-time Access**: Fetches documentation directly from the remote repository
+- **Metadata Support**: Includes source URLs, last updated dates, and content information
 
-## Key Features
+## Available Tools
 
-**Type-Safe Development**: Built with TypeScript and Zod for runtime validation and compile-time safety.
+### 1. `search_accessibility_articles`
+Search for relevant web accessibility articles from the e11y-mcp documentation repository.
 
-**Modular Architecture**: Well-organized code structure with separate modules for tools, utilities, and types.
+**Parameters:**
+- `query` (string): Search query to find relevant accessibility articles (e.g., "accordion", "button", "dialog")
+- `maxResults` (number, optional): Maximum number of results to return (1-20, default: 10)
+- `outputMode` (enum, optional): Output format - "json" or "compact-json" (default: "json")
 
-**Example Patterns**: Demonstrates data retrieval, search, analytics, and system utilities.
+**Example:**
+```json
+{
+  "query": "accordion",
+  "maxResults": 5
+}
+```
 
-**Development Ready**: Includes hot reload, testing, and MCP inspector integration.
+### 2. `fetch_accessibility_article`
+Fetch the complete content of a specific accessibility article from the e11y-mcp repository.
+
+**Parameters:**
+- `path` (string): Path to the accessibility article (from search results)
+- `includeMetadata` (boolean, optional): Include article metadata (default: true)
+- `outputMode` (enum, optional): Output format - "json" or "compact-json" (default: "json")
+
+**Example:**
+```json
+{
+  "path": "docs/www.w3.org_WAI_ARIA_apg_patterns_accordion.md",
+  "includeMetadata": true
+}
+```
+
+### 3. `list_accessibility_articles`
+List all available accessibility articles in the e11y-mcp documentation repository.
+
+**Parameters:**
+- `outputMode` (enum, optional): Output format - "json" or "compact-json" (default: "json")
 
 ## Quick Start
 
-### 1. Clone and Setup
+### 1. Installation and Setup
 ```bash
-git clone https://github.com/vltansky/mcp-boilerplate.git
-cd mcp-server-boilerplate
+git clone <your-repo-url>
+cd e11y-docs-mcp
 yarn install
 yarn build
 ```
@@ -39,7 +68,7 @@ Add to your `.cursor/mcp.json` or other MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "my-custom-server": {
+    "e11y-docs-mcp": {
       "command": "node",
       "args": ["path/to/your/dist/server.js"]
     }
@@ -47,9 +76,9 @@ Add to your `.cursor/mcp.json` or other MCP client configuration:
 }
 ```
 
-### 3. Start Developing
+### 3. Start Using
 ```bash
-yarn watch  # Start development with hot reload
+yarn start  # Start the server
 ```
 
 ### 4. Test Your Tools
@@ -58,121 +87,56 @@ Use the MCP inspector to test your tools:
 yarn inspector
 ```
 
-## Task Master - Getting Started
+## Example Usage
 
-Once you have your MCP server running, here's how to get the most out of the Task Master workflow:
-
-### Next Steps for Project Success
-
-1. **Configure AI models** (if needed) and add API keys to `.env`
-   - Models: Use `task-master models` commands
-   - Keys: Add provider API keys to .env (or inside the MCP config file i.e. .cursor/mcp.json)
-
-2. **Discuss your idea with AI** and ask for a PRD using example_prd.txt, and save it to scripts/PRD.txt
-
-3. **Ask Cursor Agent** (or run CLI) to parse your PRD and generate initial tasks:
-   - MCP Tool: parse_prd | CLI: task-master parse-prd scripts/prd.txt
-
-4. **Ask Cursor to analyze the complexity** of the tasks in your PRD using research
-   - MCP Tool: analyze_project_complexity | CLI: task-master analyze-complexity
-
-5. **Ask Cursor to expand all of your tasks** using the complexity analysis
-
-6. **Ask Cursor to begin working** on the next task
-
-7. **Add new tasks anytime** using the add-task command or MCP tool
-
-8. **Ask Cursor to set the status** of one or many tasks/subtasks at a time. Use the task id from the task lists.
-
-9. **Ask Cursor to update all tasks** from a specific task id based on new learnings or pivots in your project.
-
-10. **Ship it!**
-
-## Example Tools Included
-
-### Core Tools
-
-- **`get_data`** - Demonstrates data retrieval with filtering and pagination
-- **`search_items`** - Shows search functionality with multiple search types (exact, fuzzy, regex)
-- **`analyze_data`** - Example analytics tool with chart data generation
-- **`get_system_info`** - System utilities for date, timezone, and version information
-
-### Tool Patterns Demonstrated
-
-- **Parameter Validation**: Using Zod schemas for type-safe input validation
-- **Error Handling**: Consistent error handling and user-friendly error messages
-- **Async Operations**: Proper async/await patterns with timeout simulation
-- **Response Formatting**: JSON and compact-JSON output modes
-- **Type Safety**: Full TypeScript integration with proper type inference
-
-## Project Structure
-
-```
-src/
-├── server.ts              # Main MCP server setup and tool registration
-├── tools/
-│   └── example-tools.ts    # Example tool implementations
-└── utils/
-    └── formatter.ts        # Response formatting utilities
-
-docs/                       # Documentation files
-package.json               # Dependencies and scripts
-tsconfig.json              # TypeScript configuration
-vitest.config.ts           # Testing configuration
-```
-
-## Customizing for Your Use Case
-
-### 1. Replace Example Tools
-
-Edit `src/tools/example-tools.ts` to implement your business logic:
-
-```typescript
-export async function yourCustomOperation(input: YourInputType): Promise<YourOutputType> {
-  // Your implementation here
-  return result;
+### Search for Accessibility Patterns
+```json
+{
+  "tool": "search_accessibility_articles",
+  "parameters": {
+    "query": "button",
+    "maxResults": 5
+  }
 }
 ```
 
-### 2. Update Server Registration
-
-Modify `src/server.ts` to register your tools:
-
-```typescript
-server.tool(
-  'your_tool_name',
-  'Description of what your tool does',
-  {
-    // Zod schema for parameters
-    param1: z.string().describe('Parameter description'),
-    param2: z.number().optional().default(10)
-  },
-  async (input) => {
-    // Tool implementation
-    const result = await yourCustomOperation(input);
-    return {
-      content: [{
-        type: 'text',
-        text: formatResponse(result, input.outputMode)
-      }]
-    };
+### Fetch Complete Documentation
+```json
+{
+  "tool": "fetch_accessibility_article",
+  "parameters": {
+    "path": "docs/www.w3.org_WAI_ARIA_apg_patterns_button.md",
+    "includeMetadata": true
   }
-);
+}
 ```
 
-### 3. Add Your Data Layer
-
-Create modules for your specific data sources:
-
-```
-src/
-├── database/          # Database connections and queries
-├── external-apis/     # External API integrations
-├── file-system/       # File system operations
-└── your-domain/       # Your business logic
+### List All Available Articles
+```json
+{
+  "tool": "list_accessibility_articles",
+  "parameters": {}
+}
 ```
 
-## Development Workflow
+## Documentation Structure
+
+The server accesses documentation from the [vltansky/e11y-mcp](https://github.com/vltansky/e11y-mcp) repository, which contains:
+
+- **W3C WAI-ARIA Patterns**: Implementation guides for common UI patterns
+- **Accessibility Best Practices**: Guidelines for creating accessible web interfaces
+- **Live Examples**: Interactive demonstrations of accessible components
+- **Implementation Details**: ARIA roles, states, properties, and keyboard interactions
+
+### Available Documentation
+
+The documentation currently includes patterns such as:
+- Accordion Pattern (Sections With Show/Hide Functionality)
+- Breadcrumb Pattern
+- Date Picker Dialog Example
+- And more...
+
+## Development
 
 ### Available Scripts
 
@@ -183,74 +147,54 @@ src/
 - `yarn test:ui` - Run tests with UI
 - `yarn inspector` - Start MCP inspector for testing tools
 
-### Testing Your Tools
+### Project Structure
 
-1. **Unit Tests**: Add tests alongside your tool files
-2. **Integration Testing**: Use the MCP inspector to test tool behavior
-3. **Manual Testing**: Test with actual MCP clients like Cursor
+```
+src/
+├── server.ts              # Main MCP server setup and tool registration
+├── tools/
+│   ├── e11y-tools.ts      # Accessibility documentation tools
+│   └── e11y-tools.test.ts # Unit tests for tools
+└── utils/
+    └── formatter.ts       # Response formatting utilities
 
-### Adding Dependencies
-
-For data sources, add appropriate dependencies:
-
-```bash
-# Database
-yarn add sqlite3 @types/sqlite3
-
-# HTTP requests
-yarn add axios
-
-# File processing
-yarn add fs-extra @types/fs-extra
-
-# Date handling
-yarn add date-fns
+docs/                      # Local documentation and examples
+package.json              # Dependencies and scripts
+tsconfig.json             # TypeScript configuration
 ```
 
-## MCP Best Practices
+### Testing
 
-### Tool Design
+The server includes comprehensive tests for all tools:
 
-- **Clear Descriptions**: Write detailed tool descriptions for AI assistants
-- **Parameter Validation**: Use Zod for runtime validation
-- **Error Handling**: Provide meaningful error messages
-- **Output Consistency**: Use consistent response formats
+```bash
+yarn test        # Run all tests
+yarn test:ui     # Run tests with interactive UI
+```
 
-### Performance
+## Use Cases
 
-- **Async Operations**: Use async/await for all I/O operations
-- **Resource Management**: Clean up resources properly
-- **Caching**: Implement caching for expensive operations
-- **Pagination**: Support pagination for large datasets
+### For AI Assistants
+- **Code Review**: Check accessibility compliance in web applications
+- **Implementation Guidance**: Get specific ARIA patterns for UI components
+- **Best Practices**: Access current W3C accessibility guidelines
+- **Pattern Discovery**: Find the right accessibility pattern for specific use cases
 
-### Security
+### For Developers
+- **Quick Reference**: Access accessibility documentation without leaving your IDE
+- **Implementation Examples**: Get working code examples for accessible components
+- **Standards Compliance**: Ensure your code follows W3C accessibility guidelines
+- **Learning Resource**: Understand accessibility principles and implementation
 
-- **Input Validation**: Validate all inputs with Zod
-- **Error Messages**: Don't expose sensitive information in errors
-- **Resource Limits**: Implement appropriate limits and timeouts
-- **Authentication**: Add authentication if accessing sensitive data
+## Architecture
 
-## Common Use Cases
+The server follows a simple architecture:
 
-### File System Tools
-- File search and indexing
-- Content analysis
-- Code parsing and analysis
-
-### Database Integration
-- Query interfaces
-- Data analysis and reporting
-- Schema exploration
-
-### External API Integration
-- API wrapping and simplification
-- Data aggregation from multiple sources
-- Rate limiting and caching
-
-### Development Tools
-- Code generation
-- Testing utilities
-- Build and deployment helpers
+1. **Tool Registration**: MCP tools are registered with the server
+2. **Remote Data Access**: Documentation is fetched from the GitHub repository
+3. **Search Functionality**: Text-based search across article titles and paths
+4. **Content Retrieval**: Full markdown content with metadata extraction
+5. **Response Formatting**: Consistent JSON output with optional compact mode
 
 ## Contributing
 
@@ -262,15 +206,11 @@ yarn add date-fns
 
 ## License
 
-MIT License - feel free to use this template for your own projects.
+MIT License - feel free to use this server for your accessibility documentation needs.
 
 ## Resources
 
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- [Zod Documentation](https://zod.dev/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-
----
-
-**Ready to build your MCP server?** Start by customizing the example tools in `src/tools/example-tools.ts` and updating the server registration in `src/server.ts`.
+- [W3C Web Accessibility Initiative](https://www.w3.org/WAI/)
+- [WAI-ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/)
+- [E11y MCP Repository](https://github.com/vltansky/e11y-mcp)

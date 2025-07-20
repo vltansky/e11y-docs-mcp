@@ -1,6 +1,6 @@
 {
     "mcpServers": {
-        "mcp-server-boilerplate": {
+        "e11y-docs-mcp": {
             "command": "node",
             "args": [
                 "dist/server.js"

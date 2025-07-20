@@ -1,11 +1,11 @@
 {
-  "name": "mcp-server-boilerplate",
+  "name": "e11y-docs-mcp",
   "version": "0.1.0",
-  "description": "A boilerplate template for building Model Context Protocol (MCP) servers with TypeScript",
+  "description": "MCP server providing access to web accessibility documentation from the e11y-mcp repository. Search and fetch W3C WAI-ARIA patterns and accessibility best practices.",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "mcp-server-boilerplate": "dist/server.js"
+    "e11y-docs-mcp": "dist/server.js"
   },
   "files": [
     "dist/**/*",
@@ -25,9 +25,15 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
+    "accessibility",
+    "a11y",
+    "e11y",
+    "web-accessibility",
+    "w3c",
+    "wai-aria",
+    "aria",
+    "documentation",
     "typescript",
-    "boilerplate",
-    "template",
     "ai-assistant",
     "claude",
     "cursor"
