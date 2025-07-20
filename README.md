@@ -52,9 +52,29 @@ List all available accessibility articles in the e11y-mcp documentation reposito
 **Parameters:**
 - `outputMode` (enum, optional): Output format - "json" or "compact-json" (default: "json")
 
+## Installation
+
+### Install from NPM
+
+### For Cursor IDE
+
+```json
+{
+  "mcpServers": {
+    "e11y-docs-mcp": {
+      "command": "npx",
+      "args": ["e11y-docs-mcp@latest"]
+    }
+  }
+}
+```
+
+### For Claude Code
+
+`claude mcp add e11y-docs-mcp npx 'e11y-docs-mcp@latest'`
 ## Quick Start
 
-### 1. Installation and Setup
+### 1. Development Installation
 ```bash
 git clone <your-repo-url>
 cd e11y-docs-mcp
@@ -62,7 +82,7 @@ yarn install
 yarn build
 ```
 
-### 2. Configure MCP Client
+### 2. Configure MCP Client for Development
 Add to your `.cursor/mcp.json` or other MCP client configuration:
 
 ```json
